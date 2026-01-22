@@ -1,82 +1,49 @@
 # config.yaml
 # File ini berisi semua konfigurasi untuk setiap blockchain yang didukung.
-# Menggunakan YAML membuat penambahan atau pengubahan chain menjadi lebih mudah
-# tanpa perlu mengubah kode Python utama.
+# Format baru dengan auto-discovery: Hanya perlu rest_api_url dan decimals!
 
-empe:
-  rest_api_url: "https://empeiria-testnet-api.itrocket.net"
-  valoper_prefix: "empevaloper"
-  valcons_prefix: "empevalcons"
-  token_symbol: "EMPE"
-  base_denom: "uempe"
-  decimals: 6
-  missed_blocks_supported: true
-  signing_infos_endpoint: "/cosmos/slashing/v1beta1/signing_infos?pagination.limit=500"
-  slashing_params_endpoint: "/cosmos/slashing/v1beta1/params"
-  gov_proposals_endpoint: "/cosmos/gov/v1beta1/proposals"
-  current_plan_endpoint: "/cosmos/upgrade/v1beta1/current_plan"
-
-lumera-mainnet:
-  rest_api_url: "https://lumera-rest.publicnode.com"
-  valoper_prefix: "lumeravaloper"
-  valcons_prefix: "lumeravalcons"
-  token_symbol: "LUME"
-  base_denom: "ulume"
-  decimals: 6
-  missed_blocks_supported: true
-  signing_infos_endpoint: "/cosmos/slashing/v1beta1/signing_infos?pagination.limit=300"
-  slashing_params_endpoint: "/cosmos/slashing/v1beta1/params"
-  gov_proposals_endpoint: "/cosmos/gov/v1/proposals"
-  current_plan_endpoint: "/cosmos/upgrade/v1beta1/current_plan"
-
-lumera:
-  rest_api_url: "https://lumera-testnet-api.polkachu.com"
-  valoper_prefix: "lumeravaloper"
-  valcons_prefix: "lumeravalcons"
-  token_symbol: "LUME"
-  base_denom: "ulume"
-  decimals: 6
-  missed_blocks_supported: true
-  signing_infos_endpoint: "/cosmos/slashing/v1beta1/signing_infos?pagination.limit=300"
-  slashing_params_endpoint: "/cosmos/slashing/v1beta1/params"
-  gov_proposals_endpoint: "/cosmos/gov/v1/proposals"
-  current_plan_endpoint: "/cosmos/upgrade/v1beta1/current_plan"
-
-paxi:
-  rest_api_url: "https://mainnet-lcd.paxinet.io"
-  valoper_prefix: "paxivaloper"
-  valcons_prefix: "paxivalcons"
-  token_symbol: "PAXI"
-  base_denom: "upaxi"
-  decimals: 6
+# ============================================
+# GLOBAL DEFAULTS
+# ============================================
+defaults:
   missed_blocks_supported: true
   signing_infos_endpoint: "/cosmos/slashing/v1beta1/signing_infos?pagination.limit=300"
   slashing_params_endpoint: "/cosmos/slashing/v1beta1/params"
   gov_proposals_endpoint: "/cosmos/gov/v1beta1/proposals"
   current_plan_endpoint: "/cosmos/upgrade/v1beta1/current_plan"
 
-hippo:
-  rest_api_url: "https://api.hippo-protocol.com"
-  valoper_prefix: "hippovaloper"
-  valcons_prefix: "hippovalcons"
-  token_symbol: "HP"
-  base_denom: "ahp"
-  decimals: 18
-  missed_blocks_supported: true
-  signing_infos_endpoint: "/cosmos/slashing/v1beta1/signing_infos?pagination.limit=100"
-  slashing_params_endpoint: "/cosmos/slashing/v1beta1/params"
-  gov_proposals_endpoint: "/cosmos/gov/v1/proposals"
-  current_plan_endpoint: "/cosmos/upgrade/v1beta1/current_plan"
+# ============================================
+# CHAIN-SPECIFIC CONFIGURATIONS
+# ============================================
+# MINIMAL FORMAT: Hanya rest_api_url dan decimals yang wajib!
+# Parameter lain (valoper_prefix, valcons_prefix, base_denom, token_symbol)
+# akan di-auto-discover dari API chain.
+#
+# Anda bisa override manual jika auto-discovery gagal atau ingin custom value.
+chains:
+  empe:
+    rest_api_url: "https://empeiria-testnet-api.keywood.site"
+    decimals: 6
+    # Override pagination limit (opsional)
+    signing_infos_endpoint: "/cosmos/slashing/v1beta1/signing_infos?pagination.limit=500"
+    # Auto-discovered: valoper_prefix, valcons_prefix, base_denom, token_symbol
 
-safrochain:
-  rest_api_url: "https://rest.testnet.safrochain.com"
-  valoper_prefix: "addr_safrovaloper"
-  valcons_prefix: "addr_safrovalcons"
-  token_symbol: "SAF"
-  base_denom: "usaf"
-  decimals: 6
-  missed_blocks_supported: true
-  signing_infos_endpoint: "/cosmos/slashing/v1beta1/signing_infos?pagination.limit=300"
-  slashing_params_endpoint: "/cosmos/slashing/v1beta1/params"
-  gov_proposals_endpoint: "/cosmos/gov/v1/proposals"
-  current_plan_endpoint: "/cosmos/upgrade/v1beta1/current_plan"
+  lumen:
+    rest_api_url: "https://lumen-mainnet-api.keywood.site"
+    decimals: 6
+    gov_proposals_endpoint: "/cosmos/gov/v1/proposals"
+    # Auto-discovered: valoper_prefix, valcons_prefix, base_denom, token_symbol
+
+  paxi:
+    rest_api_url: "https://paxi-mainnet-api.keywood.site"
+    decimals: 6
+    # Auto-discovered: valoper_prefix, valcons_prefix, base_denom, token_symbol
+
+  safrochain:
+    rest_api_url: "https://safrochain-testnet-api.keywood.site"
+    decimals: 6
+    gov_proposals_endpoint: "/cosmos/gov/v1/proposals"
+    # Manual fallback (non-standard address format)
+    valoper_prefix: "addr_safrovaloper"
+    valcons_prefix: "addr_safrovalcons"
+    # Auto-discovered: base_denom, token_symbol

@@ -34,6 +34,19 @@ def init_db():
                 UNIQUE(channel_id, chain_name)
             );
         ''')
+        
+        # Table untuk caching hasil auto-discovery
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS chain_params_cache (
+                chain_name TEXT PRIMARY KEY,
+                valoper_prefix TEXT,
+                valcons_prefix TEXT,
+                base_denom TEXT,
+                token_symbol TEXT,
+                discovered_at TEXT,
+                rest_api_url TEXT
+            );
+        ''')
 
         # MIGRATION HELPER: Cek apakah kolom last_total_stake sudah ada (untuk user lama)
         try:
@@ -198,3 +211,76 @@ def get_channels_with_validator_count(chain_name: str):
             (chain_name,)
         )
         return [dict(row) for row in cursor.fetchall()]
+
+# ============================================
+# Chain Parameters Cache Functions
+# ============================================
+
+def cache_chain_params(chain_name: str, params: dict, rest_api_url: str):
+    """
+    Cache discovered chain parameters to database.
+    
+    Args:
+        chain_name: Name of the chain
+        params: Dict with keys: valoper_prefix, valcons_prefix, base_denom, token_symbol
+        rest_api_url: REST API URL used for discovery
+    """
+    try:
+        with sqlite3.connect(DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT OR REPLACE INTO chain_params_cache 
+                (chain_name, valoper_prefix, valcons_prefix, base_denom, token_symbol, discovered_at, rest_api_url)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    chain_name,
+                    params.get('valoper_prefix'),
+                    params.get('valcons_prefix'),
+                    params.get('base_denom'),
+                    params.get('token_symbol'),
+                    datetime.datetime.now().isoformat(),
+                    rest_api_url
+                )
+            )
+            logging.info(f"Cached discovered parameters for chain: {chain_name}")
+    except Exception as e:
+        logging.error(f"Failed to cache chain params for {chain_name}: {e}")
+
+def get_cached_chain_params(chain_name: str) -> dict:
+    """
+    Retrieve cached chain parameters from database.
+    
+    Returns:
+        Dict with discovered params, or empty dict if not cached
+    """
+    try:
+        with sqlite3.connect(DATABASE_NAME) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM chain_params_cache WHERE chain_name = ?",
+                (chain_name,)
+            )
+            row = cursor.fetchone()
+            
+            if row:
+                logging.debug(f"Retrieved cached params for {chain_name}")
+                return dict(row)
+            else:
+                logging.debug(f"No cached params found for {chain_name}")
+                return {}
+    except Exception as e:
+        logging.error(f"Failed to retrieve cached params for {chain_name}: {e}")
+        return {}
+
+def invalidate_chain_cache(chain_name: str):
+    """Clear cached parameters for a specific chain to force re-discovery."""
+    try:
+        with sqlite3.connect(DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM chain_params_cache WHERE chain_name = ?", (chain_name,))
+            logging.info(f"Invalidated cache for chain: {chain_name}")
+    except Exception as e:
+        logging.error(f"Failed to invalidate cache for {chain_name}: {e}")
